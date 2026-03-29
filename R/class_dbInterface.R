@@ -1,5 +1,5 @@
 #' dbInterface
-#'
+#'library((RSQLite)
 #' @description An R6 class used to interface with a database. Provides
 #' wrapper functions for common database operations, such as querying, creating
 #' tables, appending and writing to tables,
@@ -98,11 +98,16 @@ dbInterface <- R6::R6Class(
     connect = function() {
       self$set(
         "con",
-        dbConnect(
-          self$get("drv"),
-          self$get("dsn")
+        tryCatch({
+          dbConnect(
+            self$get("drv"),
+            self$get("dsn")
+          )
+        }, error = function(e) {
+          message("main DB failed switching to SQLite fallback")
+          DBI::dbConnect(RSQLite::SQLite(),"fallback.db")
+          })
         )
-      )
       log_trace("[dbi] connected to DSN '{self$get('dsn')}'")
       invisible(self)
     },
